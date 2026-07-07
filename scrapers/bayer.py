@@ -97,7 +97,7 @@ def _parse_listing_block(anchor) -> dict:
         title=title,
         url=BASE + anchor["href"] if anchor["href"].startswith("/") else anchor["href"],
         ort=title,
-        objektart=None,
+        objektart=title,  # site has no separate type field; filter on title text instead
         price=parse_price(kaufpreis_raw) or parse_price(miete_raw),
         living_area=parse_area(wohnflaeche_raw),
         plot_area=parse_area(grundstueck_raw),
