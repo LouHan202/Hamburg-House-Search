@@ -43,7 +43,7 @@ def _fetch(url: str) -> BeautifulSoup:
     return BeautifulSoup(response.text, "html.parser")
 
 
-def _parse_listing_block(anchor) -> dict:
+def _parse_listing_block(anchor, href_to_anchors) -> dict:
     container = anchor
     block_text = ""
     for _ in range(6):
@@ -58,15 +58,32 @@ def _parse_listing_block(anchor) -> dict:
         m = re.search(rf"{label}\s*\n?\s*([^\n]+)", block_text)
         return m.group(1).strip() if m else None
 
-    title_tag = container.find(["h2", "h3"]) if container else None
-    raw_title = title_tag.get_text(strip=True) if title_tag else anchor.get_text(strip=True)
+    # The "Details" anchor itself is often icon-only (no visible text).
+    # Look across every anchor sharing this href for one with real text
+    # (usually the heading link), and fall back to an image alt attribute.
+    href = anchor["href"]
+    raw_title = ""
+    for a in href_to_anchors.get(href, [anchor]):
+        text = a.get_text(strip=True)
+        if text and text.lower() not in ("details", "mehr erfahren", "weiterlesen"):
+            raw_title = text
+            break
+        img = a.find("img")
+        if img and img.get("alt"):
+            raw_title = img["alt"].strip()
+            break
 
-    status = None
+    status_markers = {
+        "sold_rented": ["gut verkauft", "gut vermietet", "verkauft", "vermietet"],
+    }
+    block_lower = block_text.lower()
+    is_sold_or_rented = any(m in block_lower for m in status_markers["sold_rented"]) or \
+                         any(m in href.lower() for m in ["gut-verkauft", "gut-vermietet"])
+
     title = raw_title
     for marker in ["–Gut verkauft–", "–Gut vermietet–", "Gut verkauft", "Gut vermietet"]:
-        if raw_title.startswith(marker):
-            status = "sold_rented"
-            title = raw_title[len(marker):].strip()
+        if title.lower().startswith(marker.lower()):
+            title = title[len(marker):].strip(" -–")
             break
 
     ort = field("Ort")
@@ -75,7 +92,9 @@ def _parse_listing_block(anchor) -> dict:
     miete_raw = field("Miete")
     listing_id_raw = field("ID:")
 
-    if status is None:
+    if is_sold_or_rented:
+        status = "sold_rented"
+    else:
         status = "Miete" if miete_raw and not kaufpreis_raw else "Kauf"
 
     return build_record(
@@ -93,16 +112,16 @@ def _parse_listing_block(anchor) -> dict:
 
 
 def _extract_records(soup: BeautifulSoup) -> list:
-    anchors = soup.find_all("a", href=DETAIL_HREF_RE)
-    seen_hrefs = set()
+    all_anchors = soup.find_all("a", href=True)
+    href_to_anchors = {}
+    for a in all_anchors:
+        if DETAIL_HREF_RE.match(a["href"]):
+            href_to_anchors.setdefault(a["href"], []).append(a)
+
     records = []
-    for a in anchors:
-        href = a["href"]
-        if href in seen_hrefs:
-            continue
-        seen_hrefs.add(href)
+    for href, anchors in href_to_anchors.items():
         try:
-            records.append(_parse_listing_block(a))
+            records.append(_parse_listing_block(anchors[0], href_to_anchors))
         except Exception:
             logger.warning("Failed to parse a Hintz & Hintz listing block, skipping.")
     return records
