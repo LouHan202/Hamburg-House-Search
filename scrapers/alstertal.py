@@ -76,9 +76,16 @@ def fetch_listings() -> list:
 
             price = None
             consumed_price_line = False
-            if i + 2 < len(lines) and PRICE_RE.search(lines[i + 2]):
-                price = parse_price(lines[i + 2])
-                consumed_price_line = True
+            # Price isn't always exactly 2 lines after the location line on
+            # the live site -- scan a wider window for the first price-like line.
+            for offset in range(1, 6):
+                idx = i + 1 + offset
+                if idx >= len(lines):
+                    break
+                if PRICE_RE.search(lines[idx]):
+                    price = parse_price(lines[idx])
+                    consumed_price_line = True
+                    break
 
             living_area_m = re.search(r"Wohnfläche[^\d]*([\d.,]+)\s*m", specs)
             plot_area_m = re.search(r"Grundst[^\d]*([\d.,]+)\s*m", specs)
@@ -102,7 +109,7 @@ def fetch_listings() -> list:
             except Exception:
                 logger.warning("Failed to parse an Alstertal Immobilien listing, skipping.")
 
-            i += 3 if consumed_price_line else 2
+            i += (1 + offset) if consumed_price_line else 2
             continue
 
         i += 1
