@@ -1,18 +1,21 @@
 """
-Scraper for Diplom-Kaufmann Hans-Peter Bayer GmbH (bayer-hamburg.de),
-the Alstertal-based agency.
+Scraper for Diplom-Kaufmann Hans-Peter Bayer GmbH (bayer-hamburg.de).
 
-The site is TYPO3 CMS with structured "Label: Value" fields per listing
-(Objektnr, Baujahr, Kaufpreis, Wohnfläche, Grundstücksfläche) but no
-documented pagination API. Since the exact pagination query parameter
-isn't publicly documented, this scraper auto-detects it at runtime: it
-tries a handful of common TYPO3 pagination formats and keeps whichever
-one actually returns a different set of listings on "page 2".
+Pagination here isn't URL-based at all -- confirmed via browser DevTools
+that clicking a page number fires a POST request to the same URL
+(https://bayer-hamburg.de/angebote), with the target page number and a
+couple of TYPO3 Extbase "trust" tokens (__referrer, __trustedProperties)
+sent as form data. Those tokens are generated fresh on every page load
+and sit in hidden <input> fields on the page -- so the approach is:
 
-If auto-detection fails, it falls back to scraping just the first page
-and logs a warning -- with only ~13 total listings on this site split
-across ~5 pages of 3, that's a real (if partial) coverage gap. See
-README.md for how to fix this by hand in 30 seconds if it comes up.
+    1. GET the page once, scrape those hidden field values straight out
+       of the HTML (they're not secret, just anti-tampering tokens)
+    2. POST them back for page=2, page=3, etc., reusing the same tokens
+       from that single GET
+
+No login or persistent session needed. If Bayer's site ever changes
+this form structure, the hidden fields won't be found and this falls
+back to page-1-only, same as before.
 """
 
 import logging
@@ -32,31 +35,42 @@ HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/125.0 Safari/537.36"
-    )
+    ),
+    "Origin": BASE,
+    "Referer": LIST_URL,
 }
 
-# Candidate pagination query-string templates to try, in order.
-# {page} gets replaced with 2, 3, 4, ...
-PAGINATION_CANDIDATES = [
-    "?tx_openimmo_list%5B%40widget_0%5D%5BcurrentPage%5D={page}",
-    "?tx_openimmo_pi1%5Bpage%5D={page}",
-    "?tx_openimmo_list%5Bpage%5D={page}",
-    "?page={page}",
+# Hidden form field names (as seen in the real POST payload) that need to
+# be echoed back unchanged for the pagination request to be accepted.
+TOKEN_FIELDS = [
+    "tx_openimmo_immobilie[__referrer][@extension]",
+    "tx_openimmo_immobilie[__referrer][@controller]",
+    "tx_openimmo_immobilie[__referrer][@action]",
+    "tx_openimmo_immobilie[__referrer][arguments]",
+    "tx_openimmo_immobilie[__referrer][@request]",
+    "tx_openimmo_immobilie[__trustedProperties]",
 ]
 
 
-def _fetch(url: str) -> BeautifulSoup:
+def _fetch_get(url: str) -> BeautifulSoup:
     response = requests.get(url, headers=HEADERS, timeout=20)
     response.raise_for_status()
     return BeautifulSoup(response.text, "html.parser")
 
 
+def _extract_tokens(soup: BeautifulSoup) -> dict:
+    tokens = {}
+    for field_name in TOKEN_FIELDS:
+        input_tag = soup.find("input", attrs={"name": field_name})
+        if input_tag and input_tag.get("value") is not None:
+            tokens[field_name] = input_tag["value"]
+    return tokens
+
+
 def _parse_listing_block(anchor) -> dict:
-    """Given a <a href="/angebot/..."> details anchor, walk up to find the
-    surrounding listing container and pull out the labeled fields."""
     container = anchor
     block_text = ""
-    for _ in range(6):  # walk up a few parent levels looking for a rich block
+    for _ in range(6):
         container = container.parent
         if container is None:
             break
@@ -82,9 +96,8 @@ def _parse_listing_block(anchor) -> dict:
         listing_id=objektnr or anchor["href"],
         title=title,
         url=BASE + anchor["href"] if anchor["href"].startswith("/") else anchor["href"],
-        ort=title,  # this site doesn't show a separate "Ort" field in the list view;
-                    # the Stadtteil is embedded in the title text instead
-        objektart=None,  # not exposed separately in the list view either
+        ort=title,
+        objektart=None,
         price=parse_price(kaufpreis_raw) or parse_price(miete_raw),
         living_area=parse_area(wohnflaeche_raw),
         plot_area=parse_area(grundstueck_raw),
@@ -94,7 +107,6 @@ def _parse_listing_block(anchor) -> dict:
 
 def _extract_records(soup: BeautifulSoup) -> list:
     anchors = soup.find_all("a", href=re.compile(r"^/angebot/"))
-    # de-duplicate: each listing usually has 2 anchors (image + "Details")
     seen_hrefs = set()
     records = []
     for a in anchors:
@@ -109,44 +121,41 @@ def _extract_records(soup: BeautifulSoup) -> list:
     return records
 
 
-def _detect_pagination_template(page1_ids: set):
-    for template in PAGINATION_CANDIDATES:
-        url = LIST_URL + template.format(page=2)
-        try:
-            soup = _fetch(url)
-        except requests.RequestException:
-            continue
-        records = _extract_records(soup)
-        ids = {r["id"] for r in records}
-        if ids and ids != page1_ids:
-            logger.info(f"Detected working pagination template: {template}")
-            return template
-    logger.warning(
-        "Could not auto-detect Bayer's pagination scheme -- only page 1 "
-        "will be scraped. See README.md to set this by hand."
-    )
-    return None
-
-
-def fetch_listings(max_pages: int = 6) -> list:
-    soup = _fetch(LIST_URL)
+def fetch_listings(max_pages: int = 8) -> list:
+    soup = _fetch_get(LIST_URL)
     all_records = _extract_records(soup)
-    page1_ids = {r["id"] for r in all_records}
+    seen_ids = {r["id"] for r in all_records}
 
-    template = _detect_pagination_template(page1_ids)
-    if template:
-        seen_ids = set(page1_ids)
-        for page in range(2, max_pages + 1):
-            url = LIST_URL + template.format(page=page)
-            try:
-                soup = _fetch(url)
-            except requests.RequestException:
-                break
-            records = _extract_records(soup)
-            new_ids = {r["id"] for r in records} - seen_ids
-            if not new_ids:
-                break  # reached the last page (results repeat)
-            all_records.extend(r for r in records if r["id"] in new_ids)
-            seen_ids |= new_ids
+    tokens = _extract_tokens(soup)
+    if len(tokens) < len(TOKEN_FIELDS):
+        logger.warning(
+            "Bayer's pagination form fields have changed or weren't found -- "
+            "only page 1 scraped. See scrapers/bayer.py TOKEN_FIELDS."
+        )
+        return all_records
+
+    for page in range(2, max_pages + 1):
+        form_data = dict(tokens)
+        form_data["tx_openimmo_immobilie[search]"] = "paginate"
+        form_data["tx_openimmo_immobilie[page]"] = str(page)
+        form_data["tx_openimmo_immobilie[objektart]"] = ""
+        form_data["tx_openimmo_immobilie[vermarktungsart]"] = ""
+        form_data["tx_openimmo_immobilie[ort]"] = ""
+
+        try:
+            response = requests.post(LIST_URL, headers=HEADERS, data=form_data, timeout=20)
+            response.raise_for_status()
+        except requests.RequestException:
+            logger.warning(f"Bayer pagination POST failed on page {page}, stopping.")
+            break
+
+        page_soup = BeautifulSoup(response.text, "html.parser")
+        records = _extract_records(page_soup)
+        new_records = [r for r in records if r["id"] not in seen_ids]
+        if not new_records:
+            break  # reached the last page
+
+        all_records.extend(new_records)
+        seen_ids |= {r["id"] for r in new_records}
 
     return all_records
