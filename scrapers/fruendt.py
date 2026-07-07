@@ -2,27 +2,22 @@
 Scraper for FRÜNDT IMMOBILIEN GMBH (fruendt.de), Alstertal/Walddörfer
 specialists with 60+ years in the area.
 
-Their listings are actually hosted on a separate platform: onOffice
-"Smart Site" (smartsite2.myonoffice.de/kunden/fruendt/57/kaufen.xhtml).
-This is a real estate CRM product used by many small/independent German
-agencies -- worth knowing, since the same parsing approach here could
-likely be reused for any other agency running onOffice Smart Site (just
-swap the customer slug + numeric ID in the URL).
+Their listings are hosted on a separate platform: onOffice "Smart Site"
+(smartsite2.myonoffice.de/kunden/fruendt/57/kaufen.xhtml) -- a real estate
+CRM product used by many small/independent German agencies.
 
-Listing data is rendered as genuine HTML <table> elements with clean
-"Label / Value" rows (PLZ, Ort, Kaufpreis, Wohnfläche, Grundstücksgröße,
-etc.) -- the most reliable structure of any source scraped so far, since
-we can parse real <tr>/<td> pairs instead of guessing at text patterns.
-
-Caveat: only confirmed against a single fetched sample showing one
-listing. It's unclear from that sample alone whether the live page
-normally lists several properties at once or one at a time -- if the
-real page shows more, this parser should still pick all of them up
-since it scans every matching <table> on the page, but this hasn't
-been verified against a multi-listing page.
+First attempt at this parser assumed the "Auf einen Blick" data (PLZ,
+Ort, Kaufpreis, Wohnfläche, Grundstücksgröße) was rendered as real HTML
+<table> elements -- that returned zero results on the live site, so the
+assumption was wrong (the page-preview tool used to inspect this site
+converts many div-based grid layouts into markdown table syntax
+regardless of the underlying HTML, which is misleading). This version
+instead scans the plain text near each listing heading for the same
+labels, the same approach used for Bayer and Hintz & Hintz.
 """
 
 import logging
+import re
 
 import requests
 from bs4 import BeautifulSoup
@@ -41,63 +36,60 @@ HEADERS = {
 }
 
 
-def _table_to_dict(table) -> dict:
-    """onOffice renders these as rows of alternating label/value cells,
-    sometimes two label/value pairs per row (a 4-cell row)."""
-    data = {}
-    for tr in table.find_all("tr"):
-        cells = [c.get_text(strip=True) for c in tr.find_all(["th", "td"])]
-        for i in range(0, len(cells) - 1, 2):
-            label, value = cells[i], cells[i + 1]
-            if label:
-                data[label] = value
-    return data
-
-
 def fetch_listings() -> list:
     response = requests.get(LIST_URL, headers=HEADERS, timeout=20)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
+    headings = soup.find_all(["h1", "h2", "h3"])
     records = []
-    for table in soup.find_all("table"):
-        fields = _table_to_dict(table)
-        if "Kaufpreis" not in fields and "PLZ" not in fields:
-            continue  # not one of the "Auf einen Blick" data tables
 
-        title_tag = table.find_previous(["h1", "h2"])
-        title = title_tag.get_text(strip=True) if title_tag else fields.get("ImmoNr", "unknown")
+    for idx, heading in enumerate(headings):
+        title = heading.get_text(strip=True)
+        if not title:
+            continue
 
-        # Check nearby text for a reservation/sold marker (appears in the
-        # "Ausstattung" prose section above the table, e.g. "***RESERVIERT***")
-        preceding_text = ""
-        node = table.find_previous(["h1"])
-        if node:
-            preceding_text = node.find_next(string=True) or ""
-            preceding_text = table.find_all_previous(limit=40)
-            preceding_text = " ".join(
-                el.get_text(" ", strip=True) for el in preceding_text
-                if hasattr(el, "get_text")
-            )
-        status = "reserved" if "RESERVIERT" in preceding_text.upper() else "Kauf"
+        # Grab all text between this heading and the next one as this
+        # listing's block.
+        block_parts = []
+        for sibling in heading.find_all_next():
+            if sibling in headings[idx + 1:idx + 2]:
+                break
+            block_parts.append(sibling.get_text(" ", strip=True))
+        block_text = " ".join(block_parts)
 
+        if "Kaufpreis" not in block_text and "PLZ" not in block_text:
+            continue  # not a listing heading (could be a nav/footer heading)
+
+        def field(label):
+            m = re.search(rf"{label}\s*:?\s*([^\s][^A-ZÄÖÜ]{{0,60}}?)(?=\s[A-ZÄÖÜ][a-zäöü]|$)", block_text)
+            return m.group(1).strip() if m else None
+
+        plz_m = re.search(r"\b(\d{5})\b", block_text)
+        ort_m = re.search(r"Ort\s*:?\s*([A-ZÄÖÜ][\w\-. ]{2,40})", block_text)
+        kaufpreis_m = re.search(r"Kaufpreis\s*:?\s*([\d.,]+)\s*€?", block_text)
+        wohnflaeche_m = re.search(r"Wohnfl[aä]che\s*:?\s*([\d.,]+)\s*m", block_text)
+        grundstueck_m = re.search(r"Grundst[uü]cksgr[oö]{1,2}e\s*:?\s*([\d.,]+)\s*m", block_text)
+        immonr_m = re.search(r"ImmoNr\.?\s*:?\s*([\w\-]+)", block_text)
+
+        is_reserved = "RESERVIERT" in block_text.upper()
         ort = " ".join(filter(None, [
-            fields.get("PLZ"), fields.get("Ort"), fields.get("Stadtteile / Orte")
-        ]))
+            plz_m.group(1) if plz_m else None,
+            ort_m.group(1).strip() if ort_m else None,
+        ])) or title
 
         try:
             records.append(build_record(
                 source="fruendt",
-                listing_id=fields.get("ImmoNr", title),
+                listing_id=immonr_m.group(1) if immonr_m else title,
                 title=title,
-                url=LIST_URL,  # individual listings are query-param based;
-                                # the base URL is the closest stable link we have
+                url=LIST_URL,
                 ort=ort,
                 objektart=title,
-                price=parse_price(fields.get("Kaufpreis")),
-                living_area=parse_area(fields.get("Wohnfläche")),
-                plot_area=parse_area(fields.get("Grundstücksgröße")),
-                status=status,
+                price=parse_price(kaufpreis_m.group(0)) if kaufpreis_m else None,
+                living_area=parse_area(wohnflaeche_m.group(0)) if wohnflaeche_m else None,
+                plot_area=parse_area(grundstueck_m.group(0)) if grundstueck_m else None,
+                status="reserved" if is_reserved else "Kauf",
             ))
         except Exception:
             logger.warning("Failed to parse a Fründt Immobilien listing, skipping.")
