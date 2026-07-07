@@ -12,7 +12,10 @@ Scheduled daily via .github/workflows/scrape.yml
 
 import logging
 
-from scrapers import bayer, hintzhintz, alstertal, stark, fruendt, vonpoll
+from scrapers import bayer, hintzhintz, alstertal, stark, fruendt
+# vonpoll disabled: their site returns 403 Forbidden to requests from GitHub
+# Actions' cloud IPs (same anti-bot pattern as ImmoScout24 and Frank Hoffmann).
+# from scrapers import vonpoll
 from scrapers.common import (
     area_matches,
     type_matches,
@@ -30,7 +33,7 @@ SOURCES = {
     "alstertal": alstertal.fetch_listings,
     "stark": stark.fetch_listings,
     "fruendt": fruendt.fetch_listings,
-    "vonpoll": vonpoll.fetch_listings,
+    # "vonpoll": vonpoll.fetch_listings,  # disabled -- see comment above
 }
 
 
@@ -47,13 +50,18 @@ def main():
             continue
 
         before = len(records)
-        records = [
+        matched = [
             r for r in records
             if area_matches(r["ort"]) and type_matches(r["objektart"])
         ]
         logger.info(
-            f"{name}: {before} listings found, {len(records)} match your area/type filters."
+            f"{name}: {before} listings found, {len(matched)} match your area/type filters."
         )
+        if before > 0 and len(matched) == 0:
+            sample = records[:3]
+            for r in sample:
+                logger.info(f"  (unmatched example -- ort: {r['ort'][:80]!r})")
+        records = matched
         all_new_records.extend(records)
 
     new_count = merge_records(existing, all_new_records)
