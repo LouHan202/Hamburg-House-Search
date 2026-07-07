@@ -1,1 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Property Ledger — Hamburg Alstertal & Walddörfer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
+:root {
+  --paper: #F1ECE0;
+  --paper-raised: #FAF7EF;
+  --ink: #1B2A3D;
+  --ink-soft: #4A5A6E;
+  --rule: #D8D0BC;
+  --brass: #A9803F;
+  --good: #4F6F52;
+  --good-bg: #E4EBE1;
+  --caution: #7A3B32;
+  --caution-bg: #F1E2DD;
+  --badge-sold: #8A8171;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+
+header.masthead {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+h1 {
+  font-family: 'Fraunces', serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-size: 34px;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+
+.masthead .subtitle {
+  font-size: 13px;
+  color: var(--ink-soft);
+  letter-spacing: 0.02em;
+}
+
+.masthead .meta {
+  text-align: right;
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  margin-bottom: 28px;
+}
+.summary .cell {
+  background: var(--paper-raised);
+  padding: 16px 18px;
+}
+.summary .cell .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
+}
+.summary .cell .value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 18px;
+  font-size: 13px;
+}
+.controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  user-select: none;
+}
+.controls select {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper-raised);
+  color: var(--ink);
+  border-radius: 3px;
+}
+.controls .load-btn {
+  margin-left: auto;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  background: none;
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.controls .load-btn:hover { background: var(--ink); color: var(--paper-raised); }
+
+#loadPanel {
+  display: none;
+  margin-bottom: 18px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  padding: 14px;
+}
+#loadPanel textarea {
+  width: 100%;
+  height: 120px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  border: 1px solid var(--rule);
+  padding: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+#loadPanel .apply-btn {
+  margin-top: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  background: var(--ink);
+  color: var(--paper-raised);
+  border: none;
+  padding: 7px 14px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--ink);
+  padding: 8px 10px;
+  font-weight: 500;
+}
+tbody tr { border-bottom: 1px solid var(--rule); }
+tbody tr:hover { background: var(--paper-raised); }
+td { padding: 12px 10px; vertical-align: top; font-size: 13.5px; }
+
+.listing-title { font-weight: 500; margin-bottom: 2px; }
+.listing-title a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--rule); }
+.listing-title a:hover { border-bottom-color: var(--ink); }
+.listing-loc { font-size: 12px; color: var(--ink-soft); }
+
+.source-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--rule);
+  padding: 2px 6px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.num { font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
+
+.badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 2px;
+  display: inline-block;
+  letter-spacing: 0.03em;
+}
+.badge.under { background: var(--good-bg); color: var(--good); }
+.badge.over { background: var(--caution-bg); color: var(--caution); }
+.badge.sold { background: #EDEAE0; color: var(--badge-sold); }
+
+.gauge { position: relative; width: 130px; height: 14px; margin-top: 4px; }
+.gauge .track { position: absolute; top: 6px; left: 0; right: 0; height: 2px; background: var(--rule); }
+.gauge .avg-mark { position: absolute; top: 2px; width: 1px; height: 10px; background: var(--ink-soft); }
+.gauge .point { position: absolute; top: 0; width: 8px; height: 8px; border-radius: 50%; transform: translateX(-4px); border: 1.5px solid var(--paper-raised); }
+.gauge .point.under { background: var(--good); }
+.gauge .point.over { background: var(--caution); }
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--ink-soft); font-family: 'Fraunces', serif; font-size: 18px; }
+
+footer.note {
+  margin-top: 28px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  border-top: 1px solid var(--rule);
+  padding-top: 14px;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <h1>Property Ledger</h1>
+      <div class="subtitle">Hamburg — Alstertal, Walddörfer, Fuhlsbüttel &amp; Langenhorn</div>
+    </div>
+    <div class="meta" id="metaInfo"></div>
+  </header>
+
+  <div class="summary" id="summaryStrip"></div>
+
+  <div class="controls">
+    <label><input type="checkbox" id="hideInactive" checked> Hide sold / rented / pending</label>
+    <label><input type="checkbox" id="hideRentals" checked> Hide rentals from comparison</label>
+    <select id="sourceFilter"><option value="all">All sources</option></select>
+    <select id="sortBy">
+      <option value="value">Sort: best value first</option>
+      <option value="price_asc">Sort: price, low to high</option>
+      <option value="price_desc">Sort: price, high to low</option>
+      <option value="ppsqm_asc">Sort: price/m², low to high</option>
+    </select>
+    <button class="load-btn" id="toggleLoad">Load new data</button>
+  </div>
+
+  <div id="loadPanel">
+    <div style="font-size:12px; color:var(--ink-soft); margin-bottom:6px;">
+      Paste the full contents of <code>data/listings.json</code> below, then click Apply.
+    </div>
+    <textarea id="jsonInput" placeholder="Paste listings.json contents here..."></textarea><br>
+    <button class="apply-btn" id="applyData">Apply</button>
+  </div>
+
+  <table id="listingTable">
+    <thead>
+      <tr>
+        <th>Listing</th>
+        <th>Source</th>
+        <th>Price</th>
+        <th>Living / Plot</th>
+        <th>€/m²</th>
+        <th>Value gauge</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+  <div class="empty-state" id="emptyState" style="display:none;">No listings match the current filters.</div>
+
+  <footer class="note" id="footNote"></footer>
+
+</div>
+
+<script>
+const DEFAULT_DATA = {
+  "alstertal:450aaa838696": {"living_area":175.0,"ort":"22397 Hamburg-Duvenstedt","plot_area":null,"price":845000.0,"price_per_sqm":4828.57,"source":"alstertal","status":"Kauf","title":"Toskana-Stadtvilla in idyllischer Feldrandlage","url":"https://www.alstertal-immo.de/immobilienangebote/"},
+  "alstertal:9f402183494c": {"living_area":130.0,"ort":"22397 Hamburg-Duvenstedt","plot_area":null,"price":null,"price_per_sqm":null,"source":"alstertal","status":"sold","title":"Am Feldrand. Am Leben. Am richtigen Ort.","url":"https://www.alstertal-immo.de/immobilienangebote/"},
+  "alstertal:b0d4fe2928e0": {"living_area":81.9,"ort":"22393 Hamburg-Sasel","plot_area":null,"price":315000.0,"price_per_sqm":3846.15,"source":"alstertal","status":"Kauf","title":"Penthouse mit Potenzial","url":"https://www.alstertal-immo.de/immobilienangebote/"},
+  "alstertal:bf07923164e8": {"living_area":null,"ort":"22393 Hamburg-Sasel","plot_area":731.0,"price":399000.0,"price_per_sqm":null,"source":"alstertal","status":"Kauf","title":"Sonniges Baugrundstück in Südwestlage","url":"https://www.alstertal-immo.de/immobilienangebote/"},
+  "alstertal:cc2300240032": {"living_area":null,"ort":"22393 Hamburg-Sasel","plot_area":440.0,"price":295000.0,"price_per_sqm":null,"source":"alstertal","status":"Kauf","title":"Baugrundstück in ruhiger Lage","url":"https://www.alstertal-immo.de/immobilienangebote/"},
+  "alstertal:f3500966838e": {"living_area":null,"ort":"22393 Hamburg - Sasel","plot_area":null,"price":null,"price_per_sqm":null,"source":"alstertal","status":"pending","title":"Frahmredder 49","url":"https://www.alstertal-immo.de/immobilienangebote/"},
+  "bayer:6203": {"living_area":null,"ort":"Schönes Baugrundstück mit Altbestand in Poppenbüttel","plot_area":907.0,"price":560000.0,"price_per_sqm":null,"source":"bayer","status":"Kauf","title":"Schönes Baugrundstück mit Altbestand in Poppenbüttel","url":"https://bayer-hamburg.de/angebot/schoenes-baugrundstueck-mit-altbestand-in-poppenbuettel"},
+  "bayer:6285": {"living_area":162.0,"ort":"Großzügiges Grundstück - Einfamilienhaus mit Sanierungsbedarf in Duvenstedt","plot_area":1997.0,"price":755000.0,"price_per_sqm":4660.49,"source":"bayer","status":"Kauf","title":"Großzügiges Grundstück - Einfamilienhaus mit Sanierungsbedarf in Duvenstedt","url":"https://bayer-hamburg.de/angebot/grosszuegiges-grundstueck-einfamilienhaus-mit-sanierungsbedarf-in-duvenstedt"},
+  "bayer:6313": {"living_area":309.0,"ort":"Charmantes Zinshaus in Sasel","plot_area":508.0,"price":795000.0,"price_per_sqm":2572.82,"source":"bayer","status":"Kauf","title":"Charmantes Zinshaus in Sasel","url":"https://bayer-hamburg.de/angebot/charmantes-zinshaus-in-sasel"},
+  "hintzhintz:1006": {"living_area":null,"ort":"22395 Hamburg Wohldorf-Ohlstedt","plot_area":null,"price":null,"price_per_sqm":null,"source":"hintzhintz","status":"sold_rented","title":"","url":"https://hintzundhintz.de/immobilien/gut-verkauft-alles-bequem-auf-einer-ebene-ruhig-und-doch-nah-bei"},
+  "hintzhintz:1012": {"living_area":null,"ort":"22397 Hamburg Duvenstedt","plot_area":null,"price":1265.0,"price_per_sqm":null,"source":"hintzhintz","status":"sold_rented","title":"","url":"https://hintzundhintz.de/immobilien/gut-vermietet-idyllisches-wohnen-im-denkmalgeschuetztem-reetdachhaus"},
+  "hintzhintz:1013": {"living_area":null,"ort":"22393 Hamburg Sasel","plot_area":null,"price":null,"price_per_sqm":null,"source":"hintzhintz","status":"sold_rented","title":"","url":"https://hintzundhintz.de/immobilien/gut-verkauft-hamburger-kaffeemuehle-grossartiges-familiendomizil"},
+  "hintzhintz:1015": {"living_area":null,"ort":"22147 Hamburg Rahlstedt","plot_area":null,"price":null,"price_per_sqm":null,"source":"hintzhintz","status":"sold_rented","title":"","url":"https://hintzundhintz.de/immobilien/gut-verkauft-grosses-einfamilienhaus-baugrundstueck-mit-idealen-moeglichkeiten-fuer-projektierer"}
+};
+
+let rawData = DEFAULT_DATA;
+
+function isRental(entry) { return entry.status === 'Miete'; }
+function isInactive(entry) { return ['sold', 'sold_rented', 'pending', 'reserved'].includes(entry.status); }
+function effectivePpsqm(entry) {
+  if (entry.price_per_sqm) return { value: entry.price_per_sqm, basis: 'living' };
+  if (entry.price && entry.plot_area) return { value: +(entry.price / entry.plot_area).toFixed(2), basis: 'plot' };
+  return null;
+}
+function displayTitle(entry, id) {
+  if (entry.title && entry.title.trim()) return entry.title.trim();
+  const slug = entry.url.split('/').filter(Boolean).pop() || id;
+  return slug.replace(/^gut-(verkauft|vermietet)-/, '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+function fmtEUR(n) { return n == null ? '—' : '€' + Math.round(n).toLocaleString('de-DE'); }
+function fmtArea(entry) {
+  const parts = [];
+  if (entry.living_area) parts.push(entry.living_area + ' m² living');
+  if (entry.plot_area) parts.push(entry.plot_area + ' m² plot');
+  return parts.length ? parts.join(' · ') : '—';
+}
+
+function render() {
+  const hideInactive = document.getElementById('hideInactive').checked;
+  const hideRentals = document.getElementById('hideRentals').checked;
+  const sourceFilter = document.getElementById('sourceFilter').value;
+  const sortBy = document.getElementById('sortBy').value;
+
+  let entries = Object.entries(rawData).map(([id, e]) => ({ id, ...e }));
+
+  const sourceSelect = document.getElementById('sourceFilter');
+  if (sourceSelect.options.length <= 1) {
+    const sources = [...new Set(entries.map(e => e.source))].sort();
+    sources.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      sourceSelect.appendChild(opt);
+    });
+  }
+
+  const comparable = entries.filter(e => !isInactive(e) && !isRental(e) && effectivePpsqm(e));
+  const ppsqms = comparable.map(e => effectivePpsqm(e).value);
+  const avg = ppsqms.length ? ppsqms.reduce((a, b) => a + b, 0) / ppsqms.length : null;
+  const min = ppsqms.length ? Math.min(...ppsqms) : null;
+  const max = ppsqms.length ? Math.max(...ppsqms) : null;
+
+  const activeCount = entries.filter(e => !isInactive(e)).length;
+  document.getElementById('summaryStrip').innerHTML = `
+    <div class="cell"><div class="label">Total tracked</div><div class="value">${entries.length}</div></div>
+    <div class="cell"><div class="label">Currently active</div><div class="value">${activeCount}</div></div>
+    <div class="cell"><div class="label">Comparable (for €/m²)</div><div class="value">${comparable.length}</div></div>
+    <div class="cell"><div class="label">Avg €/m²</div><div class="value">${avg ? '€' + Math.round(avg).toLocaleString('de-DE') : '—'}</div></div>
+  `;
+
+  let filtered = entries.filter(e => {
+    if (hideInactive && isInactive(e)) return false;
+    if (hideRentals && isRental(e)) return false;
+    if (sourceFilter !== 'all' && e.source !== sourceFilter) return false;
+    return true;
+  });
+
+  filtered.forEach(e => { e._ppsqm = effectivePpsqm(e); });
+
+  if (sortBy === 'value') {
+    filtered.sort((a, b) => {
+      const av = a._ppsqm ? a._ppsqm.value : Infinity;
+      const bv = b._ppsqm ? b._ppsqm.value : Infinity;
+      return av - bv;
+    });
+  } else if (sortBy === 'price_asc') {
+    filtered.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+  } else if (sortBy === 'price_desc') {
+    filtered.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+  } else if (sortBy === 'ppsqm_asc') {
+    filtered.sort((a, b) => (a._ppsqm ? a._ppsqm.value : Infinity) - (b._ppsqm ? b._ppsqm.value : Infinity));
+  }
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  document.getElementById('emptyState').style.display = filtered.length ? 'none' : 'block';
+  document.getElementById('listingTable').style.display = filtered.length ? 'table' : 'none';
+
+  filtered.forEach(e => {
+    const tr = document.createElement('tr');
+    const ppsqm = e._ppsqm;
+    const statusBadge = isInactive(e)
+      ? `<span class="badge sold">${e.status.replace('_', '/')}</span>`
+      : (isRental(e) ? `<span class="badge sold">rental</span>` : '');
+
+    let valueBadge = '';
+    let gauge = '<span style="color:var(--ink-soft); font-size:12px;">n/a</span>';
+    if (ppsqm && avg && !isInactive(e) && !isRental(e)) {
+      const deltaPct = ((ppsqm.value - avg) / avg) * 100;
+      const under = deltaPct < 0;
+      if (Math.abs(deltaPct) >= 8) {
+        valueBadge = `<span class="badge ${under ? 'under' : 'over'}">${under ? '▼' : '▲'} ${Math.abs(deltaPct).toFixed(0)}% ${under ? 'below' : 'above'} avg</span>`;
+      }
+      const range = (max - min) || 1;
+      const pos = ((ppsqm.value - min) / range) * 100;
+      const avgPos = ((avg - min) / range) * 100;
+      gauge = `
+        <div class="gauge">
+          <div class="track"></div>
+          <div class="avg-mark" style="left:${avgPos}%;"></div>
+          <div class="point ${under ? 'under' : 'over'}" style="left:${pos}%;"></div>
+        </div>
+        <div style="font-size:10px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace;">${ppsqm.basis === 'plot' ? 'plot-based' : 'living-based'}</div>
+      `;
+    }
+
+    tr.innerHTML = `
+      <td>
+        <div class="listing-title"><a href="${e.url}" target="_blank" rel="noopener">${displayTitle(e, e.id)}</a></div>
+        <div class="listing-loc">${(e.ort || '').slice(0, 70)}</div>
+        ${statusBadge}
+      </td>
+      <td><span class="source-tag">${e.source}</span></td>
+      <td class="num">${fmtEUR(e.price)}${isRental(e) && e.price ? '<br><span style="font-size:10px;color:var(--ink-soft);">/month</span>' : ''}</td>
+      <td class="num">${fmtArea(e)}</td>
+      <td class="num">${ppsqm ? fmtEUR(ppsqm.value) : '—'} ${valueBadge}</td>
+      <td>${gauge}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const isLive = document.getElementById('metaInfo').dataset.live === 'true';
+  document.getElementById('metaInfo').textContent =
+    `${entries.length} listings tracked · ${comparable.length} used for €/m² baseline` +
+    (isLive ? ' · live data' : ' · sample data (load your own below)');
+
+  document.getElementById('footNote').innerHTML = `
+    <strong>How this works:</strong> "Value gauge" compares each listing's price per m² against the average
+    across all currently tracked, comparable (non-rental, active) listings in this dataset — not a formal
+    market index, just what's in your own tracker right now. Plot-only listings (no living area) are compared
+    on price per m² of land instead, marked "plot-based." With a small sample size, treat the ▼/▲ flags as a
+    starting point for further digging, not a verdict.
+  `;
+}
+
+document.getElementById('hideInactive').addEventListener('change', render);
+document.getElementById('hideRentals').addEventListener('change', render);
+document.getElementById('sourceFilter').addEventListener('change', render);
+document.getElementById('sortBy').addEventListener('change', render);
+document.getElementById('toggleLoad').addEventListener('click', () => {
+  const panel = document.getElementById('loadPanel');
+  panel.style.display = panel.style.display === 'none' || !panel.style.display ? 'block' : 'none';
+});
+document.getElementById('applyData').addEventListener('click', () => {
+  try {
+    const parsed = JSON.parse(document.getElementById('jsonInput').value);
+    rawData = parsed;
+    document.getElementById('sourceFilter').innerHTML = '<option value="all">All sources</option>';
+    document.getElementById('loadPanel').style.display = 'none';
+    render();
+  } catch (err) {
+    alert('Could not parse that JSON — check it\\'s the full contents of listings.json.\\n\\n' + err.message);
+  }
+});
+
+// When this file is hosted alongside data/listings.json (e.g. via GitHub
+// Pages in the same repo), fetch the live data automatically. If that
+// fails -- opened as a local file, or the path doesn't exist yet -- fall
+// back to the bundled sample data above, no error shown to the user.
+fetch('data/listings.json')
+  .then(res => { if (!res.ok) throw new Error('not found'); return res.json(); })
+  .then(json => {
+    rawData = json;
+    document.getElementById('metaInfo').dataset.live = 'true';
+    render();
+  })
+  .catch(() => { /* silently keep the bundled sample data */ })
+  .finally(() => render());
+
+render();
+</script>
+</body>
+</html>
