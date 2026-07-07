@@ -12,10 +12,12 @@ Scheduled daily via .github/workflows/scrape.yml
 
 import logging
 
-from scrapers import bayer, hintzhintz, alstertal, stark, fruendt
-# vonpoll disabled: their site returns 403 Forbidden to requests from GitHub
-# Actions' cloud IPs (same anti-bot pattern as ImmoScout24 and Frank Hoffmann).
-# from scrapers import vonpoll
+from scrapers import bayer, hintzhintz, alstertal, stark
+# vonpoll disabled: 403 Forbidden from GitHub Actions' cloud IPs (anti-bot).
+# fruendt disabled: two different structural parsing approaches both
+# returned zero listings -- likely JavaScript-rendered content that a
+# plain requests fetch can't see. Would need a headless browser to revisit.
+# from scrapers import vonpoll, fruendt
 from scrapers.common import (
     area_matches,
     type_matches,
@@ -32,7 +34,7 @@ SOURCES = {
     "hintzhintz": hintzhintz.fetch_listings,
     "alstertal": alstertal.fetch_listings,
     "stark": stark.fetch_listings,
-    "fruendt": fruendt.fetch_listings,
+    # "fruendt": fruendt.fetch_listings,  # disabled -- see comment above
     # "vonpoll": vonpoll.fetch_listings,  # disabled -- see comment above
 }
 
