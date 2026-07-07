@@ -73,6 +73,13 @@ def _parse_listing_block(anchor, href_to_anchors) -> dict:
             raw_title = img["alt"].strip()
             break
 
+    if not raw_title and block_text:
+        # Last resort: the title is usually the very first line of the
+        # listing's own text block, before the "Ort"/"ID:" labels start.
+        first_line = block_text.split("\n", 1)[0].strip()
+        if first_line and first_line.lower() not in ("details", "mehr erfahren"):
+            raw_title = first_line
+
     status_markers = {
         "sold_rented": ["gut verkauft", "gut vermietet", "verkauft", "vermietet"],
     }
