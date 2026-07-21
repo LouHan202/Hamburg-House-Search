@@ -24,11 +24,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run scraper
+           - name: Run scraper
         run: python run_all.py
+
+      - name: Copy data for GitHub Pages
+        run: |
+          mkdir -p docs/data
+          cp data/listings.json docs/data/listings.json
 
       - name: Commit updated data
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: update listings data"
-          file_pattern: data/listings.json
+          file_pattern: data/listings.json docs/data/listings.json
