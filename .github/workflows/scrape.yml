@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-           - name: Run scraper
+      - name: Run scraper
         run: python run_all.py
 
       - name: Copy data for GitHub Pages
