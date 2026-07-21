@@ -34,6 +34,7 @@ SOURCES = {
     "hintzhintz": hintzhintz.fetch_listings,
     "alstertal": alstertal.fetch_listings,
     "stark": stark.fetch_listings,
+    "wentzel": wentzel.fetch_listings,
     # "fruendt": fruendt.fetch_listings,  # disabled -- see comment above
     # "vonpoll": vonpoll.fetch_listings,  # disabled -- see comment above
 }
