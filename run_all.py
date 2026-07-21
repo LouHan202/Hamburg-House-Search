@@ -12,7 +12,7 @@ Scheduled daily via .github/workflows/scrape.yml
 
 import logging
 
-from scrapers import bayer, hintzhintz, alstertal, stark
+from scrapers import bayer, hintzhintz, alstertal, stark, wentzel
 # vonpoll disabled: 403 Forbidden from GitHub Actions' cloud IPs (anti-bot).
 # fruendt disabled: two different structural parsing approaches both
 # returned zero listings -- likely JavaScript-rendered content that a
