@@ -2,7 +2,7 @@
   "alstertal:450aaa838696": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "alstertal:450aaa838696",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": 175.0,
     "objektart": null,
     "ort": "22397 Hamburg-Duvenstedt",
@@ -17,7 +17,7 @@
   "alstertal:9f402183494c": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "alstertal:9f402183494c",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": 130.0,
     "objektart": null,
     "ort": "22397 Hamburg-Duvenstedt",
@@ -32,7 +32,7 @@
   "alstertal:b0d4fe2928e0": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "alstertal:b0d4fe2928e0",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": 81.9,
     "objektart": null,
     "ort": "22393 Hamburg-Sasel",
@@ -47,7 +47,7 @@
   "alstertal:bf07923164e8": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "alstertal:bf07923164e8",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": null,
     "objektart": null,
     "ort": "22393 Hamburg-Sasel",
@@ -62,7 +62,7 @@
   "alstertal:cc2300240032": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "alstertal:cc2300240032",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": null,
     "objektart": null,
     "ort": "22393 Hamburg-Sasel",
@@ -92,7 +92,7 @@
   "alstertal:f3500966838e": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "alstertal:f3500966838e",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": null,
     "objektart": null,
     "ort": "22393 Hamburg - Sasel",
@@ -107,7 +107,7 @@
   "alstertal:fe3b135f7903": {
     "first_seen": "2026-07-10T09:32:00.392821+00:00",
     "id": "alstertal:fe3b135f7903",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": null,
     "objektart": null,
     "ort": "22393 Hamburg-Sasel",
@@ -122,7 +122,7 @@
   "bayer:6203": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "bayer:6203",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": null,
     "objektart": null,
     "ort": "Schönes Baugrundstück mit Altbestand in Poppenbüttel",
@@ -137,7 +137,7 @@
   "bayer:6285": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "bayer:6285",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": 162.0,
     "objektart": null,
     "ort": "Großzügiges Grundstück - Einfamilienhaus mit Sanierungsbedarf in Duvenstedt",
@@ -197,7 +197,7 @@
   "bayer:6313": {
     "first_seen": "2026-07-07T19:21:37.414215+00:00",
     "id": "bayer:6313",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": 309.0,
     "objektart": null,
     "ort": "Charmantes Zinshaus in Sasel",
@@ -227,7 +227,7 @@
   "hintzhintz:1006": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "hintzhintz:1006",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": null,
     "objektart": "Einfamilienhaus",
     "ort": "22395 Hamburg Wohldorf-Ohlstedt",
@@ -242,7 +242,7 @@
   "hintzhintz:1012": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "hintzhintz:1012",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": null,
     "objektart": "Einfamilienhaus",
     "ort": "22397 Hamburg Duvenstedt",
@@ -257,7 +257,7 @@
   "hintzhintz:1013": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "hintzhintz:1013",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": null,
     "objektart": "Einfamilienhaus",
     "ort": "22393 Hamburg Sasel",
@@ -272,7 +272,7 @@
   "hintzhintz:1015": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "hintzhintz:1015",
-    "last_seen": "2026-07-23T08:06:35.166392+00:00",
+    "last_seen": "2026-07-24T08:03:13.465422+00:00",
     "living_area": null,
     "objektart": "Grundstück",
     "ort": "22147 Hamburg Rahlstedt",
