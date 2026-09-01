@@ -152,7 +152,7 @@
   "bayer:6285": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "bayer:6285",
-    "last_seen": "2026-08-31T11:57:46.292113+00:00",
+    "last_seen": "2026-09-01T10:37:25.765294+00:00",
     "living_area": 162.0,
     "objektart": null,
     "ort": "Großzügiges Grundstück - Einfamilienhaus mit Sanierungsbedarf in Duvenstedt",
@@ -212,7 +212,7 @@
   "bayer:6313": {
     "first_seen": "2026-07-07T19:21:37.414215+00:00",
     "id": "bayer:6313",
-    "last_seen": "2026-08-31T11:57:46.292113+00:00",
+    "last_seen": "2026-09-01T10:37:25.765294+00:00",
     "living_area": 309.0,
     "objektart": null,
     "ort": "Charmantes Zinshaus in Sasel",
@@ -242,7 +242,7 @@
   "hintzhintz:1006": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "hintzhintz:1006",
-    "last_seen": "2026-08-31T11:57:46.292113+00:00",
+    "last_seen": "2026-09-01T10:37:25.765294+00:00",
     "living_area": null,
     "objektart": "Einfamilienhaus",
     "ort": "22395 Hamburg Wohldorf-Ohlstedt",
@@ -257,7 +257,7 @@
   "hintzhintz:1012": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "hintzhintz:1012",
-    "last_seen": "2026-08-31T11:57:46.292113+00:00",
+    "last_seen": "2026-09-01T10:37:25.765294+00:00",
     "living_area": null,
     "objektart": "Einfamilienhaus",
     "ort": "22397 Hamburg Duvenstedt",
@@ -272,7 +272,7 @@
   "hintzhintz:1013": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "hintzhintz:1013",
-    "last_seen": "2026-08-31T11:57:46.292113+00:00",
+    "last_seen": "2026-09-01T10:37:25.765294+00:00",
     "living_area": null,
     "objektart": "Einfamilienhaus",
     "ort": "22393 Hamburg Sasel",
@@ -287,7 +287,7 @@
   "hintzhintz:1015": {
     "first_seen": "2026-07-07T18:53:14.019631+00:00",
     "id": "hintzhintz:1015",
-    "last_seen": "2026-08-31T11:57:46.292113+00:00",
+    "last_seen": "2026-09-01T10:37:25.765294+00:00",
     "living_area": null,
     "objektart": "Grundstück",
     "ort": "22147 Hamburg Rahlstedt",
